@@ -25,7 +25,7 @@ Author: Markus H (MawKKe) <markus@mawkke.fi> 2024-04-21
 
 import sys
 import shlex
-
+import ast
 
 def main():
     if len(sys.argv) > 1:
@@ -40,18 +40,29 @@ Example:
     ->
     ls -l 'foo/bar with spaces'
 
-WARNING: the tool runs eval() on the given input
+NOTE: the expression must be a list and only contain string literals
 """.strip()
     )
     print()
     print('-' * 5)
     print('Enter python list to un-python:')
-    arg = input('>>> ')
+    expr = input('>>> ')
     print('-' * 5)
     print()
 
-    li = eval(arg)
-    print('#', shlex.join(str(o) for o in li))
+    try:
+        li = ast.literal_eval(expr)
+        if not isinstance(li, (list, tuple)):
+            print('ERROR: expression is not a list')
+            return 10
+        for i, e in enumerate(li):
+            if not isinstance(e, str):
+                print(f'ERROR: element "{e}" at index #{i} is not a string literal')
+                return 20
+        print('#', shlex.join(str(o) for o in li))
+    except ValueError as e:
+        print('ERROR: list contains non-literal expressions')
+        return 30
 
     return 0
 
